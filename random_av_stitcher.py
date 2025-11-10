@@ -87,8 +87,17 @@ class RandomAVStitcherApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("随机音视频拼接工具")
-        self.geometry("720x600")
+        self.geometry("900x750")
         self.resizable(True, True)
+
+        # Configure modern color scheme
+        self.bg_color = "#f5f6fa"
+        self.card_color = "#ffffff"
+        self.accent_color = "#3498db"
+        self.text_color = "#2c3e50"
+        self.border_color = "#dcdde1"
+
+        self.configure(bg=self.bg_color)
 
         self.target_minutes_var = tk.StringVar(value="8")
         self.first_video_file_var = tk.StringVar()
@@ -117,17 +126,31 @@ class RandomAVStitcherApp(tk.Tk):
 
     def _build_ui(self) -> None:
         # Create a canvas with scrollbar for the entire form
-        canvas = tk.Canvas(self)
+        canvas = tk.Canvas(self, bg=self.bg_color, highlightthickness=0)
         scrollbar = tk.Scrollbar(self, orient="vertical", command=canvas.yview)
-        scrollable_frame = tk.Frame(canvas, padx=12, pady=12)
 
-        scrollable_frame.bind(
+        # Create outer container to center the content
+        outer_frame = tk.Frame(canvas, bg=self.bg_color)
+
+        # Create centered content frame with max width
+        scrollable_frame = tk.Frame(outer_frame, padx=30, pady=30, bg=self.bg_color)
+
+        # Pack the content frame with centered position
+        scrollable_frame.pack(expand=True)
+
+        outer_frame.bind(
             "<Configure>",
             lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
         )
 
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.create_window((0, 0), window=outer_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Update canvas window width to match canvas width
+        def on_canvas_configure(event):
+            canvas.itemconfig(canvas.find_all()[0], width=event.width)
+
+        canvas.bind("<Configure>", on_canvas_configure)
 
         canvas.pack(side="left", fill=tk.BOTH, expand=True)
         scrollbar.pack(side="right", fill="y")
@@ -149,6 +172,12 @@ class RandomAVStitcherApp(tk.Tk):
 
         main_frame = scrollable_frame
         row = 0
+
+        # Basic Settings Section
+        basic_section = self._create_section_frame(main_frame, "基本设置")
+        basic_section.grid(row=row, column=0, columnspan=3, sticky="ew", pady=(0, 15))
+        row += 1
+
         row = self._add_labeled_entry(
             main_frame,
             row,
@@ -175,29 +204,43 @@ class RandomAVStitcherApp(tk.Tk):
         )
 
         # Add checkboxes in one row
-        checkbox_frame = tk.Frame(main_frame)
-        checkbox_frame.grid(row=row, column=0, columnspan=3, sticky="w", pady=4)
+        checkbox_frame = tk.Frame(main_frame, bg=self.bg_color)
+        checkbox_frame.grid(row=row, column=0, columnspan=3, sticky="w", pady=10)
 
         keep_audio_check = tk.Checkbutton(
             checkbox_frame,
             text="保留原声",
             variable=self.keep_original_audio_var,
+            bg=self.bg_color,
+            activebackground=self.bg_color,
+            font=("Arial", 11),
         )
-        keep_audio_check.pack(side=tk.LEFT, padx=(0, 15))
+        keep_audio_check.pack(side=tk.LEFT, padx=(0, 25))
 
         audio_order_check = tk.Checkbutton(
             checkbox_frame,
             text="按名称拼接音乐",
             variable=self.sort_audio_by_name_var,
+            bg=self.bg_color,
+            activebackground=self.bg_color,
+            font=("Arial", 11),
         )
-        audio_order_check.pack(side=tk.LEFT, padx=(0, 15))
+        audio_order_check.pack(side=tk.LEFT, padx=(0, 25))
 
         subtitle_check = tk.Checkbutton(
             checkbox_frame,
             text="启用字幕",
             variable=self.enable_subtitles_var,
+            bg=self.bg_color,
+            activebackground=self.bg_color,
+            font=("Arial", 11),
         )
         subtitle_check.pack(side=tk.LEFT)
+        row += 1
+
+        # Subtitle Settings Section
+        subtitle_section = self._create_section_frame(main_frame, "字幕设置")
+        subtitle_section.grid(row=row, column=0, columnspan=3, sticky="ew", pady=(15, 15))
         row += 1
 
         row = self._add_path_picker(
@@ -225,6 +268,11 @@ class RandomAVStitcherApp(tk.Tk):
             label="字幕识别语言（留空自动）",
             textvariable=self.subtitle_language_var,
         )
+
+        # Video Settings Section
+        video_section = self._create_section_frame(main_frame, "视频设置")
+        video_section.grid(row=row, column=0, columnspan=3, sticky="ew", pady=(15, 15))
+        row += 1
 
         row = self._add_path_picker(
             main_frame,
@@ -254,6 +302,12 @@ class RandomAVStitcherApp(tk.Tk):
             label="从开头素材拼接数量",
             textvariable=self.opening_count_var,
         )
+
+        # Audio Settings Section
+        audio_section = self._create_section_frame(main_frame, "音频设置")
+        audio_section.grid(row=row, column=0, columnspan=3, sticky="ew", pady=(15, 15))
+        row += 1
+
         row = self._add_path_picker(
             main_frame,
             row,
@@ -277,17 +331,64 @@ class RandomAVStitcherApp(tk.Tk):
             is_dir=True,
         )
 
-        self.start_button = tk.Button(
-            main_frame,
-            text="开始生成",
-            command=self._on_start_clicked,
-            width=20,
-        )
-        self.start_button.grid(row=row, column=0, columnspan=3, pady=(12, 8))
+        # Output Section
+        output_section = self._create_section_frame(main_frame, "输出路径")
+        output_section.grid(row=row, column=0, columnspan=3, sticky="ew", pady=(15, 15))
         row += 1
 
-        log_label = tk.Label(main_frame, text="日志 / 状态")
-        log_label.grid(row=row, column=0, columnspan=3, sticky="w")
+        # Start button with improved styling using Frame for better color control
+        button_container = tk.Frame(main_frame, bg=self.bg_color)
+        button_container.grid(row=row, column=0, columnspan=3, pady=(20, 15))
+
+        # Create button frame with colored background
+        self.start_button_frame = tk.Frame(
+            button_container,
+            bg=self.accent_color,
+            relief=tk.RAISED,
+            borderwidth=2,
+            cursor="hand2",
+        )
+        self.start_button_frame.pack()
+
+        # Button label
+        self.start_button_label = tk.Label(
+            self.start_button_frame,
+            text="开始生成",
+            bg=self.accent_color,
+            fg="white",
+            font=("Arial", 12, "bold"),
+            padx=60,
+            pady=15,
+            cursor="hand2",
+        )
+        self.start_button_label.pack()
+
+        # Bind click event
+        def on_button_click(e):
+            self._on_start_clicked()
+
+        self.start_button_frame.bind("<Button-1>", on_button_click)
+        self.start_button_label.bind("<Button-1>", on_button_click)
+
+        # Add hover effect
+        def on_enter(e):
+            self.start_button_frame.config(bg="#2c7db5")
+            self.start_button_label.config(bg="#2c7db5")
+
+        def on_leave(e):
+            self.start_button_frame.config(bg=self.accent_color)
+            self.start_button_label.config(bg=self.accent_color)
+
+        self.start_button_frame.bind("<Enter>", on_enter)
+        self.start_button_label.bind("<Enter>", on_enter)
+        self.start_button_frame.bind("<Leave>", on_leave)
+        self.start_button_label.bind("<Leave>", on_leave)
+
+        row += 1
+
+        # Log section
+        log_section = self._create_section_frame(main_frame, "运行日志")
+        log_section.grid(row=row, column=0, columnspan=3, sticky="ew", pady=(15, 10))
         row += 1
 
         self.log_text = scrolledtext.ScrolledText(
@@ -295,21 +396,65 @@ class RandomAVStitcherApp(tk.Tk):
             width=80,
             height=14,
             state=tk.DISABLED,
+            bg="#f8f9fa",
+            fg=self.text_color,
+            font=("Consolas", 10),
+            relief=tk.FLAT,
+            borderwidth=1,
+            highlightthickness=1,
+            highlightbackground=self.border_color,
+            wrap=tk.WORD,
         )
         self.log_text.grid(row=row, column=0, columnspan=3, sticky="nsew")
         main_frame.grid_rowconfigure(row, weight=1)
 
-        # Enable trackpad scrolling for log text area
-        def _on_log_mousewheel(event):
-            self.log_text.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
+        # Enable trackpad scrolling for log text area and prevent event propagation
         def _on_log_trackpad(event):
-            self.log_text.yview_scroll(int(-1 * event.delta), "units")
+            # Get the first and last visible line to check if we can scroll
+            first_visible = float(self.log_text.yview()[0])
+            last_visible = float(self.log_text.yview()[1])
+
+            # Calculate scroll direction
+            if event.delta > 0:  # Scrolling up
+                if first_visible > 0:  # Can scroll up
+                    self.log_text.yview_scroll(int(-1 * event.delta), "units")
+                    return "break"  # Prevent propagation
+            else:  # Scrolling down
+                if last_visible < 1.0:  # Can scroll down
+                    self.log_text.yview_scroll(int(-1 * event.delta), "units")
+                    return "break"  # Prevent propagation
+
+            # If log can't scroll in that direction, allow propagation
+            return None
+
+        def _on_log_button_scroll(event, direction):
+            # Get the first and last visible line
+            first_visible = float(self.log_text.yview()[0])
+            last_visible = float(self.log_text.yview()[1])
+
+            if direction == "up" and first_visible > 0:
+                self.log_text.yview_scroll(-1, "units")
+                return "break"
+            elif direction == "down" and last_visible < 1.0:
+                self.log_text.yview_scroll(1, "units")
+                return "break"
+
+            return None
 
         # Bind scrolling events to the log text widget
         self.log_text.bind("<MouseWheel>", _on_log_trackpad)
-        self.log_text.bind("<Button-4>", lambda e: self.log_text.yview_scroll(-1, "units"))
-        self.log_text.bind("<Button-5>", lambda e: self.log_text.yview_scroll(1, "units"))
+        self.log_text.bind("<Button-4>", lambda e: _on_log_button_scroll(e, "up"))
+        self.log_text.bind("<Button-5>", lambda e: _on_log_button_scroll(e, "down"))
+
+        # Handle focus to ensure scrolling works when mouse enters
+        def _on_log_enter(event):
+            self.log_text.focus_set()
+
+        def _on_log_leave(event):
+            self.focus_set()
+
+        self.log_text.bind("<Enter>", _on_log_enter)
+        self.log_text.bind("<Leave>", _on_log_leave)
 
     def _load_last_settings(self) -> None:
         settings = _load_settings()
@@ -372,6 +517,25 @@ class RandomAVStitcherApp(tk.Tk):
         }
         _save_settings(data)
 
+    def _create_section_frame(self, parent: tk.Widget, title: str) -> tk.Frame:
+        """Create a section title frame with modern styling"""
+        section = tk.Frame(parent, bg=self.bg_color)
+
+        title_label = tk.Label(
+            section,
+            text=title,
+            font=("Arial", 13, "bold"),
+            fg=self.accent_color,
+            bg=self.bg_color,
+        )
+        title_label.pack(side=tk.LEFT)
+
+        # Add separator line
+        separator = tk.Frame(section, height=2, bg=self.border_color)
+        separator.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(15, 0))
+
+        return section
+
     def _add_labeled_entry(
         self,
         parent: tk.Widget,
@@ -380,15 +544,34 @@ class RandomAVStitcherApp(tk.Tk):
         label: str,
         textvariable: tk.StringVar,
     ) -> int:
-        tk.Label(parent, text=label).grid(
+        label_widget = tk.Label(
+            parent,
+            text=label,
+            bg=self.bg_color,
+            fg=self.text_color,
+            font=("Arial", 11),
+        )
+        label_widget.grid(
             row=row,
             column=0,
             sticky="w",
-            padx=(0, 8),
-            pady=4,
+            padx=(0, 15),
+            pady=8,
         )
-        entry = tk.Entry(parent, textvariable=textvariable, width=40)
-        entry.grid(row=row, column=1, sticky="we", pady=4)
+
+        entry = tk.Entry(
+            parent,
+            textvariable=textvariable,
+            font=("Arial", 11),
+            relief=tk.SOLID,
+            borderwidth=1,
+            bg=self.card_color,
+            highlightthickness=1,
+            highlightbackground=self.border_color,
+            highlightcolor=self.accent_color,
+        )
+        entry.grid(row=row, column=1, sticky="we", pady=8, ipady=4)
+
         parent.grid_columnconfigure(1, weight=1)
         return row + 1
 
@@ -402,15 +585,33 @@ class RandomAVStitcherApp(tk.Tk):
         is_dir: bool,
         filetypes: Optional[Sequence[Tuple[str, str]]] = None,
     ) -> int:
-        tk.Label(parent, text=label).grid(
+        label_widget = tk.Label(
+            parent,
+            text=label,
+            bg=self.bg_color,
+            fg=self.text_color,
+            font=("Arial", 11),
+        )
+        label_widget.grid(
             row=row,
             column=0,
             sticky="w",
-            padx=(0, 8),
-            pady=4,
+            padx=(0, 15),
+            pady=8,
         )
-        entry = tk.Entry(parent, textvariable=textvariable, width=40)
-        entry.grid(row=row, column=1, sticky="we", pady=4)
+
+        entry = tk.Entry(
+            parent,
+            textvariable=textvariable,
+            font=("Arial", 11),
+            relief=tk.SOLID,
+            borderwidth=1,
+            bg=self.card_color,
+            highlightthickness=1,
+            highlightbackground=self.border_color,
+            highlightcolor=self.accent_color,
+        )
+        entry.grid(row=row, column=1, sticky="we", pady=8, ipady=4)
 
         def _browse() -> None:
             if is_dir:
@@ -420,8 +621,27 @@ class RandomAVStitcherApp(tk.Tk):
             if selection:
                 textvariable.set(selection)
 
-        browse_btn = tk.Button(parent, text="浏览…", command=_browse, width=10)
-        browse_btn.grid(row=row, column=2, padx=(8, 0), pady=4)
+        browse_btn = tk.Button(
+            parent,
+            text="浏览…",
+            command=_browse,
+            width=10,
+            bg=self.card_color,
+            fg=self.accent_color,
+            font=("Arial", 10, "bold"),
+            relief=tk.SOLID,
+            borderwidth=1,
+            cursor="hand2",
+            highlightthickness=0,
+            activebackground=self.accent_color,
+            activeforeground="white",
+        )
+        browse_btn.grid(row=row, column=2, padx=(12, 0), pady=8)
+
+        # Add hover effect for browse button
+        browse_btn.bind("<Enter>", lambda e: browse_btn.config(bg=self.accent_color, fg="white"))
+        browse_btn.bind("<Leave>", lambda e: browse_btn.config(bg=self.card_color, fg=self.accent_color))
+
         return row + 1
 
     def _append_log(self, message: str) -> None:
@@ -437,8 +657,16 @@ class RandomAVStitcherApp(tk.Tk):
 
     def _set_start_button_state(self, enabled: bool) -> None:
         def _update() -> None:
-            state = tk.NORMAL if enabled else tk.DISABLED
-            self.start_button.configure(state=state)
+            if enabled:
+                # Enable button
+                self.start_button_label.config(text="开始生成", fg="white")
+                self.start_button_frame.bind("<Button-1>", lambda e: self._on_start_clicked())
+                self.start_button_label.bind("<Button-1>", lambda e: self._on_start_clicked())
+            else:
+                # Disable button
+                self.start_button_label.config(text="处理中...", fg="#cccccc")
+                self.start_button_frame.unbind("<Button-1>")
+                self.start_button_label.unbind("<Button-1>")
 
         self.after(0, _update)
 
@@ -789,7 +1017,13 @@ class RandomAVStitcherApp(tk.Tk):
                         f"{log_prefix}音频：复制源文件失败，改为重新编码：{exc}"
                     )
 
-            final_segment.export(export_path, format="mp3")
+            # Export with higher quality and bitrate to preserve volume
+            final_segment.export(
+                export_path,
+                format="mp3",
+                bitrate="320k",
+                parameters=["-q:a", "0"]  # Highest quality
+            )
             self._append_log(f"{log_prefix}音频导出完成：{export_path}")
             return AudioBuildResult(
                 segment=final_segment,
@@ -1895,10 +2129,13 @@ def merge_video_and_audio(
 
     if keep_original_audio:
         # Mix original video audio with background music
+        # Background music at 1.5x volume (weight=1.5)
+        # Video audio at original volume (weight=1)
+        # normalize=0 prevents automatic volume reduction
         cmd.extend(
             [
                 "-filter_complex",
-                "[0:a][1:a]amix=inputs=2:duration=shortest[aout]",
+                "[0:a][1:a]amix=inputs=2:duration=shortest:dropout_transition=2:weights=1 1.5:normalize=0[aout]",
                 "-map",
                 "0:v:0",
                 "-map",
@@ -1908,20 +2145,22 @@ def merge_video_and_audio(
                 "-c:a",
                 "aac",
                 "-b:a",
-                "192k",
+                "320k",
                 "-shortest",
             ]
         )
     else:
-        # Only use background music
+        # Only use background music - preserve original volume
         cmd.extend(
             [
                 "-c:v",
                 "copy",
+                "-filter:a",
+                "volume=1.0",  # Preserve original volume
                 "-c:a",
                 "aac",
                 "-b:a",
-                "192k",
+                "320k",  # Higher bitrate to preserve quality
                 "-map",
                 "0:v:0",
                 "-map",
