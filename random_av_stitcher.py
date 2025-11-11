@@ -356,9 +356,9 @@ class RandomAVStitcherApp(tk.Tk):
             text="开始生成",
             bg=self.accent_color,
             fg="white",
-            font=("Arial", 12, "bold"),
-            padx=60,
-            pady=15,
+            font=("Arial", 11, "bold"),
+            padx=40,
+            pady=10,
             cursor="hand2",
         )
         self.start_button_label.pack()
@@ -626,21 +626,12 @@ class RandomAVStitcherApp(tk.Tk):
             text="浏览…",
             command=_browse,
             width=10,
-            bg=self.card_color,
-            fg=self.accent_color,
-            font=("Arial", 10, "bold"),
-            relief=tk.SOLID,
-            borderwidth=1,
             cursor="hand2",
+            highlightbackground=self.bg_color,
             highlightthickness=0,
-            activebackground=self.accent_color,
-            activeforeground="white",
+            font=("Arial", 11),
         )
-        browse_btn.grid(row=row, column=2, padx=(12, 0), pady=8)
-
-        # Add hover effect for browse button
-        browse_btn.bind("<Enter>", lambda e: browse_btn.config(bg=self.accent_color, fg="white"))
-        browse_btn.bind("<Leave>", lambda e: browse_btn.config(bg=self.card_color, fg=self.accent_color))
+        browse_btn.grid(row=row, column=2, padx=(12, 0), pady=8, ipady=2)
 
         return row + 1
 
