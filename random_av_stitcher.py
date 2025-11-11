@@ -246,7 +246,7 @@ class RandomAVStitcherApp(tk.Tk):
         row = self._add_path_picker(
             main_frame,
             row,
-            label="字幕 SRT 文件夹（启用字幕必填）",
+            label="字幕文件夹 SRT/ASS（启用字幕必填）",
             textvariable=self.subtitle_dir_var,
             is_dir=True,
         )
@@ -745,10 +745,10 @@ class RandomAVStitcherApp(tk.Tk):
             self.first_music_file_var.get(), "指定第一首音乐", AUDIO_EXTENSIONS
         )
         subtitle_dir = self._validate_optional_directory(
-            self.subtitle_dir_var.get(), "字幕 SRT 文件夹"
+            self.subtitle_dir_var.get(), "字幕文件夹"
         )
         if self.enable_subtitles_var.get() and subtitle_dir is None:
-            raise ValueError("启用字幕时必须提供字幕 SRT 文件夹。")
+            raise ValueError("启用字幕时必须提供字幕文件夹 (SRT/ASS)。")
 
         subtitle_font = self.subtitle_font_var.get().strip() or "ZY Oliver"
         try:
@@ -886,7 +886,7 @@ class RandomAVStitcherApp(tk.Tk):
         font_file = None
         if params.subtitles_enabled:
             if params.subtitle_dir is None:
-                raise ValueError("启用字幕时必须提供字幕 SRT 文件夹。")
+                raise ValueError("启用字幕时必须提供字幕文件夹 (SRT/ASS)。")
             # Download ZY Oliver font if needed
             if params.subtitle_font == "ZY Oliver":
                 self._append_log(f"{log_prefix}字幕：正在准备 ZY Oliver 字体...")
@@ -1113,7 +1113,7 @@ class RandomAVStitcherApp(tk.Tk):
             segments = None
 
         if segments is None:
-            self._append_log(f"{log_prefix}字幕：没有可用的 SRT，尝试 Whisper 自动识别。")
+            self._append_log(f"{log_prefix}字幕：没有可用的 SRT/ASS，尝试 Whisper 自动识别。")
             whisper_segments = self._transcribe_audio_segments(
                 audio_result.export_path,
                 language=subtitle_language,
@@ -1497,7 +1497,8 @@ def load_segments_from_transcript_file(
 
 def find_matching_subtitle(subtitle_dir: Path, audio_path: Path) -> Path:
     base = audio_path.stem
-    preferred_exts = [".srt", ".ass"]
+    # Prefer ASS over SRT for better subtitle quality
+    preferred_exts = [".ass", ".srt"]
     for ext in preferred_exts:
         candidate = subtitle_dir / f"{base}{ext}"
         if candidate.exists() and candidate.is_file():
