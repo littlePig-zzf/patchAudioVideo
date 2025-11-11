@@ -181,7 +181,7 @@ class RandomAVStitcherApp(tk.Tk):
         row = self._add_labeled_entry(
             main_frame,
             row,
-            label="目标时长（分钟）",
+            label="目标时长（分钟，按名拼接可留空）",
             textvariable=self.target_minutes_var,
         )
         row = self._add_labeled_entry(
@@ -692,13 +692,21 @@ class RandomAVStitcherApp(tk.Tk):
         self._worker_thread.start()
 
     def _collect_parameters(self) -> GenerationParams:
-        try:
-            target_minutes = float(self.target_minutes_var.get())
-        except ValueError as exc:
-            raise ValueError("目标时长需要是数字（例如 8 或 8.5）。") from exc
+        # Check if sort by name is enabled
+        sort_audio_by_name = self.sort_audio_by_name_var.get()
 
-        if target_minutes <= 0:
-            raise ValueError("目标时长需要大于 0。")
+        # Allow empty target duration when sorting audio by name
+        target_minutes_str = self.target_minutes_var.get().strip()
+        if not target_minutes_str and sort_audio_by_name:
+            target_minutes = 0.0  # 0 means use all audio files
+        else:
+            try:
+                target_minutes = float(target_minutes_str)
+            except ValueError as exc:
+                raise ValueError("目标时长需要是数字（例如 8 或 8.5）。") from exc
+
+            if target_minutes <= 0:
+                raise ValueError("目标时长需要大于 0（按名称拼接时可留空使用全部音乐）。")
 
         try:
             video_count = int(self.video_count_var.get())
@@ -842,12 +850,16 @@ class RandomAVStitcherApp(tk.Tk):
         log_prefix = f"[{run_label}] "
 
         target_ms = int(params.target_minutes * 60 * 1000)
-        self._append_log(f"{log_prefix}目标时长：{params.target_minutes} 分钟（{target_ms} 毫秒）")
 
         music_paths = list_files_with_extensions(params.music_dir, AUDIO_EXTENSIONS)
         if not music_paths:
             raise ValueError("音乐文件夹中未找到任何音频文件，请检查文件格式。")
         self._append_log(f"{log_prefix}找到 {len(music_paths)} 个音乐文件。")
+
+        if target_ms == 0 and params.sort_audio_by_name:
+            self._append_log(f"{log_prefix}目标时长：使用全部音乐文件")
+        else:
+            self._append_log(f"{log_prefix}目标时长：{params.target_minutes} 分钟（{target_ms} 毫秒）")
 
         output_dir = params.output_dir
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -946,12 +958,20 @@ class RandomAVStitcherApp(tk.Tk):
         if audio_speed_multiplier <= 0:
             raise ValueError("音频速度倍数需要大于 0。")
 
-        effective_target_ms = max(1, int(round(target_ms * audio_speed_multiplier)))
+        # If target_ms is 0, use all audio files
+        use_all_audio = (target_ms == 0 and sort_audio_by_name)
+
+        if use_all_audio:
+            effective_target_ms = float('inf')  # No limit, use all files
+            self._append_log(f"{log_prefix}音乐拼接模式：使用全部音乐文件（按文件名排列）。")
+        else:
+            effective_target_ms = max(1, int(round(target_ms * audio_speed_multiplier)))
 
         # Copy list so we can shuffle without mutating original
         all_tracks = list(music_paths)
         if sort_audio_by_name:
-            self._append_log(f"{log_prefix}音乐拼接顺序：按文件名排列。")
+            if not use_all_audio:
+                self._append_log(f"{log_prefix}音乐拼接顺序：按文件名排列。")
         else:
             random.shuffle(all_tracks)
             self._append_log(f"{log_prefix}音乐拼接顺序：随机。")
@@ -1046,40 +1066,54 @@ class RandomAVStitcherApp(tk.Tk):
         track_pool = all_tracks.copy()
         pool_index = 0
 
-        while total_duration < effective_target_ms:
-            # Refresh pool if exhausted
-            if pool_index >= len(track_pool):
-                pool_index = 0
-                if not sort_audio_by_name:
-                    random.shuffle(track_pool)
-
-            track_path = track_pool[pool_index]
-
-            # Skip if in last two tracks (avoid immediate repetition)
-            if track_path in last_two_tracks:
-                pool_index += 1
-                # If we've checked all tracks and all are in last_two, allow repetition
+        if use_all_audio:
+            # Use all audio files exactly once in order
+            for track_path in track_pool:
+                self._append_log(f"{log_prefix}拼接音乐：{track_path.name}")
+                segment = AudioSegment.from_file(track_path)
+                combined += segment
+                total_duration = len(combined)
+                used_files.append(track_path)
+                if len(used_files) > 1:
+                    reencode_required = True
+                clip_duration = probe_audio_duration(track_path) or len(segment) / 1000.0
+                clip_segments.append((track_path, clip_duration))
+        else:
+            # Original logic: loop until target duration is reached
+            while total_duration < effective_target_ms:
+                # Refresh pool if exhausted
                 if pool_index >= len(track_pool):
                     pool_index = 0
-                    last_two_tracks.clear()
-                continue
+                    if not sort_audio_by_name:
+                        random.shuffle(track_pool)
 
-            self._append_log(f"{log_prefix}拼接音乐：{track_path.name}")
-            segment = AudioSegment.from_file(track_path)
-            combined += segment
-            total_duration = len(combined)
-            used_files.append(track_path)
-            if len(used_files) > 1:
-                reencode_required = True
-            clip_duration = probe_audio_duration(track_path) or len(segment) / 1000.0
-            clip_segments.append((track_path, clip_duration))
+                track_path = track_pool[pool_index]
 
-            # Update last two tracks
-            last_two_tracks.append(track_path)
-            if len(last_two_tracks) > 2:
-                last_two_tracks.pop(0)
+                # Skip if in last two tracks (avoid immediate repetition)
+                if track_path in last_two_tracks:
+                    pool_index += 1
+                    # If we've checked all tracks and all are in last_two, allow repetition
+                    if pool_index >= len(track_pool):
+                        pool_index = 0
+                        last_two_tracks.clear()
+                    continue
 
-            pool_index += 1
+                self._append_log(f"{log_prefix}拼接音乐：{track_path.name}")
+                segment = AudioSegment.from_file(track_path)
+                combined += segment
+                total_duration = len(combined)
+                used_files.append(track_path)
+                if len(used_files) > 1:
+                    reencode_required = True
+                clip_duration = probe_audio_duration(track_path) or len(segment) / 1000.0
+                clip_segments.append((track_path, clip_duration))
+
+                # Update last two tracks
+                last_two_tracks.append(track_path)
+                if len(last_two_tracks) > 2:
+                    last_two_tracks.pop(0)
+
+                pool_index += 1
 
         return finalize_audio()
 
