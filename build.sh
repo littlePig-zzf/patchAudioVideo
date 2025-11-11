@@ -14,9 +14,12 @@ rm -rf build dist
 pyinstaller --onefile \
     --windowed \
     --name "随机音视频拼接工具" \
+    --icon="icons/icon.icns" \
     --clean \
     --noconfirm \
+    --exclude-module torch \
     --exclude-module tensorboard \
+    --exclude-module whisper \
     random_av_stitcher.py
 
 if [ $? -eq 0 ]; then

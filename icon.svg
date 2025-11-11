@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with rounded corners -->
+  <rect width="1024" height="1024" rx="226" fill="url(#gradient-bg)"/>
+
+  <!-- Gradient definitions -->
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="gradient-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#667eea"/>
+      <stop offset="100%" stop-color="#764ba2"/>
+    </linearGradient>
+
+    <!-- Film strip gradient -->
+    <linearGradient id="gradient-film" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#f0f0f0" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <!-- Audio wave gradient -->
+    <linearGradient id="gradient-wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffd89b"/>
+      <stop offset="100%" stop-color="#19547b"/>
+    </linearGradient>
+
+    <!-- Shuffle icon gradient -->
+    <linearGradient id="gradient-shuffle" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f093fb"/>
+      <stop offset="100%" stop-color="#f5576c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Film strip frame (top left) -->
+  <g transform="translate(200, 220)">
+    <!-- Film strip background -->
+    <rect x="0" y="0" width="280" height="200" rx="12" fill="url(#gradient-film)"/>
+
+    <!-- Film holes (top) -->
+    <rect x="15" y="15" width="25" height="25" rx="4" fill="#667eea"/>
+    <rect x="70" y="15" width="25" height="25" rx="4" fill="#667eea"/>
+    <rect x="125" y="15" width="25" height="25" rx="4" fill="#667eea"/>
+    <rect x="180" y="15" width="25" height="25" rx="4" fill="#667eea"/>
+    <rect x="235" y="15" width="25" height="25" rx="4" fill="#667eea"/>
+
+    <!-- Film holes (bottom) -->
+    <rect x="15" y="160" width="25" height="25" rx="4" fill="#667eea"/>
+    <rect x="70" y="160" width="25" height="25" rx="4" fill="#667eea"/>
+    <rect x="125" y="160" width="25" height="25" rx="4" fill="#667eea"/>
+    <rect x="180" y="160" width="25" height="25" rx="4" fill="#667eea"/>
+    <rect x="235" y="160" width="25" height="25" rx="4" fill="#667eea"/>
+
+    <!-- Film content area -->
+    <rect x="30" y="55" width="220" height="90" rx="6" fill="#667eea" opacity="0.3"/>
+  </g>
+
+  <!-- Film strip frame (bottom right) -->
+  <g transform="translate(544, 604)">
+    <!-- Film strip background -->
+    <rect x="0" y="0" width="280" height="200" rx="12" fill="url(#gradient-film)"/>
+
+    <!-- Film holes (top) -->
+    <rect x="15" y="15" width="25" height="25" rx="4" fill="#764ba2"/>
+    <rect x="70" y="15" width="25" height="25" rx="4" fill="#764ba2"/>
+    <rect x="125" y="15" width="25" height="25" rx="4" fill="#764ba2"/>
+    <rect x="180" y="15" width="25" height="25" rx="4" fill="#764ba2"/>
+    <rect x="235" y="15" width="25" height="25" rx="4" fill="#764ba2"/>
+
+    <!-- Film holes (bottom) -->
+    <rect x="15" y="160" width="25" height="25" rx="4" fill="#764ba2"/>
+    <rect x="70" y="160" width="25" height="25" rx="4" fill="#764ba2"/>
+    <rect x="125" y="160" width="25" height="25" rx="4" fill="#764ba2"/>
+    <rect x="180" y="160" width="25" height="25" rx="4" fill="#764ba2"/>
+    <rect x="235" y="160" width="25" height="25" rx="4" fill="#764ba2"/>
+
+    <!-- Film content area -->
+    <rect x="30" y="55" width="220" height="90" rx="6" fill="#764ba2" opacity="0.3"/>
+  </g>
+
+  <!-- Audio waveform (center) -->
+  <g transform="translate(312, 450)">
+    <!-- Waveform bars -->
+    <rect x="0" y="40" width="30" height="80" rx="15" fill="url(#gradient-wave)" opacity="0.9"/>
+    <rect x="50" y="20" width="30" height="120" rx="15" fill="url(#gradient-wave)" opacity="0.9"/>
+    <rect x="100" y="0" width="30" height="160" rx="15" fill="url(#gradient-wave)" opacity="0.9"/>
+    <rect x="150" y="30" width="30" height="100" rx="15" fill="url(#gradient-wave)" opacity="0.9"/>
+    <rect x="200" y="50" width="30" height="60" rx="15" fill="url(#gradient-wave)" opacity="0.9"/>
+    <rect x="250" y="25" width="30" height="110" rx="15" fill="url(#gradient-wave)" opacity="0.9"/>
+    <rect x="300" y="10" width="30" height="140" rx="15" fill="url(#gradient-wave)" opacity="0.9"/>
+    <rect x="350" y="35" width="30" height="90" rx="15" fill="url(#gradient-wave)" opacity="0.9"/>
+  </g>
+
+  <!-- Shuffle/Random icon (center) -->
+  <g transform="translate(412, 380)">
+    <circle cx="100" cy="100" r="90" fill="url(#gradient-shuffle)" opacity="0.95"/>
+
+    <!-- Shuffle arrows -->
+    <g fill="white">
+      <!-- Top arrow -->
+      <path d="M 65 60 L 135 60 L 135 50 L 155 70 L 135 90 L 135 80 L 75 80 L 75 100 L 55 80 L 75 60 Z" opacity="0.95"/>
+
+      <!-- Bottom arrow -->
+      <path d="M 135 140 L 65 140 L 65 150 L 45 130 L 65 110 L 65 120 L 125 120 L 125 100 L 145 120 L 125 140 Z" opacity="0.95"/>
+    </g>
+  </g>
+
+  <!-- Connecting lines (suggest combining/stitching) -->
+  <g stroke="white" stroke-width="6" stroke-linecap="round" stroke-dasharray="12,8" opacity="0.5">
+    <line x1="340" y1="320" x2="412" y2="420"/>
+    <line x1="684" y1="704" x2="612" y2="580"/>
+  </g>
+</svg>

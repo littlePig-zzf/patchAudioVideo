@@ -10,9 +10,11 @@ dist/
 .eggs/
 
 # PyInstaller
-*.spec
 *.manifest
 *.exe
+# Keep build_app.spec and icon generation spec files
+!build_app.spec
+!随机音视频拼接工具.spec
 
 # Virtual environments
 venv/
